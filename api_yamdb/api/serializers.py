@@ -1,8 +1,9 @@
-from titles.models import Titles, Genres, Categories
+from django.contrib.auth.models import AnonymousUser
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
 from users.models import User
+from reviews.models import Review, Comment, Titles, Genres, Categories
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -61,4 +62,37 @@ class UserSerializer(serializers.ModelSerializer):
             'last_name',
             'bio',
             'role',
+        )
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели отзыва."""
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='username'
+    )
+
+    class Meta:
+        model = Review
+        fields = (
+            'id',
+            'text',
+            'author',
+            'score',
+            'pub_date',
+        )
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели комментария."""
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='username'
+    )
+
+    class Meta:
+        model = Comment
+        fields = (
+            'id',
+            'text',
+            'author',
+            'pub_date',
         )
