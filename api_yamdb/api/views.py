@@ -1,8 +1,57 @@
+import uuid
+
+from django.core.mail import send_mail
+from django.db import IntegrityError
 from titles.models import Titles, Categories, Genres
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, viewsets
-from .serializers import (TitlesSerializer, CategoriesSerializer,
-                          GenresSerializer)
+from rest_framework import filters, viewsets, status
+from rest_framework.permissions import AllowAny
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+from api.serializers import (TitlesSerializer,
+                             CategoriesSerializer,
+                             GenresSerializer,
+                             SignUpSerializer,
+                             UserSerializer,
+                             )
+from api.permissions import (IsAdminOrAuthor,
+                             )
+from users.models import User
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def signup(request):
+    serializer = SignUpSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    email = serializer.validated_data['email']
+    username = serializer.validated_data['username']
+    try:
+        user, create = User.objects.get_or_create(
+            username=username,
+            email=email
+        )
+    except IntegrityError:
+        return Response(
+            'Пользователь с такими полями уже зарегистрирован',
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    confirmation_code = str(uuid.uuid4())
+    user.confirmation_code = confirmation_code
+    user.save()
+    send_mail(
+        'Код подверждения', confirmation_code,
+        ['admin@email.com'], (email, ), fail_silently=False
+    )
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    pagination_class = PageNumberPagination
+    permission_classes = (IsAdminOrAuthor, )
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
