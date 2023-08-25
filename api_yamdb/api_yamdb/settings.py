@@ -26,9 +26,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'api.apps.ApiConfig',
-    'titles.apps.TitlesConfig',
     'rest_framework_simplejwt',
     'users.apps.UsersConfig',
+    'reviews.apps.ReviewsConfig',
 ]
 
 MIDDLEWARE = [
