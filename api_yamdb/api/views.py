@@ -8,6 +8,7 @@ from rest_framework import filters, viewsets, status, serializers
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Review, Titles, Categories, Genres
 from api.serializers import (TitlesSerializer,
@@ -17,6 +18,7 @@ from api.serializers import (TitlesSerializer,
                              UserSerializer,
                              CommentSerializer,
                              ReviewSerializer,
+                             TokenSerializer,
                              )
 from api.permissions import (IsAdminOrAuthor,
                              IsAdminOrAuthorOrModerator,
@@ -49,6 +51,20 @@ def signup(request):
         ['admin@email.com'], (email, ), fail_silently=False
     )
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def token(request):
+    serializer = TokenSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    username = serializer.validated_data['username']
+    confirmation_code = serializer.validated_data['confirmation_code']
+    userdata = get_object_or_404(User, username=username)
+    if confirmation_code == userdata.confirmation_code:
+        token = str(AccessToken.for_user(userdata))
+        return Response({'token': token}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserViewSet(viewsets.ModelViewSet):
