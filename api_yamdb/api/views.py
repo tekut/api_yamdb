@@ -5,8 +5,8 @@ from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets, status, serializers
-from rest_framework.permissions import AllowAny
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
@@ -19,8 +19,10 @@ from api.serializers import (TitlesSerializer,
                              CommentSerializer,
                              ReviewSerializer,
                              TokenSerializer,
+                             NoRoleSerializer,
                              )
-from api.permissions import (IsAdminOrAuthor,
+from api.permissions import (IsAdmin,
+                             IsAdminOrAuthor,
                              IsAdminOrAuthorOrModerator,
                              )
 from users.models import User
@@ -71,6 +73,24 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (IsAdminOrAuthor, )
+    lookup_field = 'username'
+
+    @action(
+        methods=['get', 'patch'],
+        detail=False,
+        url_path='me',
+        permission_classes=(IsAuthenticated, )
+    )
+    def me_patch(self, request):
+        user = get_object_or_404(User, username=self.request.user)
+        if request.method == 'GET':
+            serializer = NoRoleSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        if request.method == 'PATCH':
+            serializer = NoRoleSerializer(user, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
@@ -78,6 +98,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
     serializer_class = TitlesSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category', 'genre', 'name', 'year')
+    permission_classes = [IsAdmin]
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
@@ -85,6 +106,7 @@ class CategoriesViewSet(viewsets.ModelViewSet):
     serializer_class = CategoriesSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
+    permission_classes = [IsAdmin]
 
 
 class GenresViewSet(viewsets.ModelViewSet):
@@ -92,6 +114,7 @@ class GenresViewSet(viewsets.ModelViewSet):
     serializer_class = GenresSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
+    permission_classes = [IsAdmin]
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
