@@ -4,7 +4,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from users.models import User
 
 
-class Categories(models.Model):
+class Category(models.Model):
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50, unique=True)
 
@@ -20,7 +20,7 @@ class Genres(models.Model):
         return self.name
 
 
-class Titles(models.Model):
+class Title(models.Model):
     name = models.TextField(max_length=256)
     year = models.IntegerField('Год выпуска')
     description = models.TextField(null=True)
@@ -28,7 +28,7 @@ class Titles(models.Model):
                                    related_name='titles',
                                    )
     category = models.ForeignKey(
-        Categories,
+        Category,
         on_delete=models.SET_NULL,
         null=True,
         related_name='titles',
@@ -44,7 +44,7 @@ class Review(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='reviews')
     title = models.ForeignKey(
-        Titles, on_delete=models.CASCADE, related_name='reviews')
+        Title, on_delete=models.CASCADE, related_name='reviews')
     score = models.IntegerField(
         'Оценка',
         default=1,

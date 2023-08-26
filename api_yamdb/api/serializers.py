@@ -3,13 +3,13 @@ from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
 from users.models import User
-from reviews.models import Review, Comment, Titles, Genres, Categories
+from reviews.models import Review, Comment, Title, Genres, Category
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Categories
+        model = Category
         fields = 'name', 'slug',
 
 
@@ -21,12 +21,26 @@ class GenresSerializer(serializers.ModelSerializer):
 
 
 class TitlesSerializer(serializers.ModelSerializer):
-    category = SlugRelatedField(slug_field='name', read_only=True)
-    genre = SlugRelatedField(slug_field='name', many=True, read_only=True)
+    category = CategoriesSerializer(read_only=True)
+    genre = GenresSerializer(many=True, read_only=True)
 
     class Meta:
-        fields = 'name', 'year', 'description', 'genre', 'category',
-        model = Titles
+        fields = 'id', 'name', 'year', 'description', 'genre', 'category',
+        model = Title
+
+
+class TitlesPostSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(
+        slug_field='slug', queryset=Category.objects.all()
+    )
+    genre = serializers.SlugRelatedField(
+        slug_field='slug', queryset=Genres.objects.all(),
+        many=True
+    )
+
+    class Meta:
+        fields = '__all__'
+        model = Title
 
 
 class SignUpSerializer(serializers.Serializer):
