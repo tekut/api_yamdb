@@ -10,7 +10,7 @@ from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import Review, Titles, Categories, Genres
+from reviews.models import Review, Title, Categories, Genres
 from api.serializers import (TitlesSerializer,
                              CategoriesSerializer,
                              GenresSerializer,
@@ -94,7 +94,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
-    queryset = Titles.objects.all()
+    queryset = Title.objects.all()
     serializer_class = TitlesSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category', 'genre', 'name', 'year')
@@ -121,11 +121,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для отзывов."""
     serializer_class = ReviewSerializer
     permission_classes = (IsAdminOrAuthorOrModerator,)
+    lookup_url_kwarg = 'review_id'
 
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
-        reviews_id = self.kwargs.get('pk')
-        title = get_object_or_404(Titles, id=title_id)
+        reviews_id = self.kwargs.get('review_id')
+        title = get_object_or_404(Title, id=title_id)
 
         if not reviews_id:
             return title.reviews.all()
@@ -135,7 +136,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title_id = self.kwargs.get('title_id')
         serializer.save(
             author=self.request.user,
-            title=Titles.objects.get(id=title_id),
+            title=Title.objects.get(id=title_id),
         )
 
 
@@ -143,12 +144,13 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для комментариев."""
     serializer_class = CommentSerializer
     permission_classes = (IsAdminOrAuthorOrModerator,)
+    lookup_url_kwarg = 'comment_id'
 
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
         reviews_id = self.kwargs.get('review_id')
-        comment_id = self.kwargs.get('pk')
-        title = get_object_or_404(Titles, id=title_id)
+        comment_id = self.kwargs.get('comment_id')
+        title = get_object_or_404(Title, id=title_id)
         review = get_object_or_404(Review, id=reviews_id)
 
         if not comment_id:
