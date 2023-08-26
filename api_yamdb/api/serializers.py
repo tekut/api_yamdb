@@ -4,7 +4,7 @@ from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
 from users.models import User
-from reviews.models import Review, Comment, Titles, Genres, Categories
+from reviews.models import Review, Comment, Title, Genres, Categories
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -27,11 +27,12 @@ class TitlesSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField()
 
     class Meta:
-        fields = 'name', 'year', 'rating', 'description', 'genre', 'category',
-        model = Titles
+        fields = ('id', 'name', 'year', 'rating',
+                  'description', 'genre', 'category',)
+        model = Title
 
     def get_rating(self, obj):
-        title = Titles.objects.get(id=obj.id)
+        title = Title.objects.get(id=obj.id)
         reviews = title.reviews.all()
         rating = 0
         if reviews:
@@ -97,12 +98,15 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
 
     def validate(self, data):
-        author = self.context.get('request').user
-        title_id = self.context.get('view').kwargs.get('title_id')
-        if author.reviews.filter(title=title_id):
-            raise serializers.ValidationError(
-                'Вы уже оставили отзыв к этому произведению.'
-            )
+        request = self.context.get('request')
+        if request.method == 'POST':
+            author = request.user
+            title_id = self.context.get('view').kwargs.get('title_id')
+            if author.reviews.filter(title=title_id):
+                raise serializers.ValidationError(
+                    'Вы уже оставили отзыв к этому произведению.'
+                )
+            return data
         return data
 
     class Meta:

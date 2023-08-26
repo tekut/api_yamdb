@@ -20,7 +20,7 @@ class Genres(models.Model):
         return self.name
 
 
-class Titles(models.Model):
+class Title(models.Model):
     name = models.TextField(max_length=256)
     year = models.IntegerField('Год выпуска')
     description = models.TextField(null=True)
@@ -44,7 +44,7 @@ class Review(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='reviews')
     title = models.ForeignKey(
-        Titles, on_delete=models.CASCADE, related_name='reviews')
+        Title, on_delete=models.CASCADE, related_name='reviews')
     score = models.IntegerField(
         'Оценка',
         default=1,
