@@ -1,4 +1,5 @@
-from django.contrib.auth.models import AnonymousUser
+from decimal import Decimal
+
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
@@ -27,6 +28,17 @@ class TitlesSerializer(serializers.ModelSerializer):
     class Meta:
         fields = 'id', 'name', 'year', 'description', 'genre', 'category',
         model = Title
+
+    def get_rating(self, obj):
+        title = Title.objects.get(id=obj.id)
+        reviews = title.reviews.all()
+        rating = 0
+        if reviews:
+            for review in reviews:
+                rating += review.score
+            average_value = Decimal(rating / len(reviews))
+            return average_value.quantize(Decimal("1.00"))
+        return None
 
 
 class TitlesPostSerializer(serializers.ModelSerializer):
@@ -96,6 +108,18 @@ class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )
+
+    def validate(self, data):
+        request = self.context.get('request')
+        if request.method == 'POST':
+            author = request.user
+            title_id = self.context.get('view').kwargs.get('title_id')
+            if author.reviews.filter(title=title_id):
+                raise serializers.ValidationError(
+                    'Вы уже оставили отзыв к этому произведению.'
+                )
+            return data
+        return data
 
     class Meta:
         model = Review

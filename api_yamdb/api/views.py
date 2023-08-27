@@ -143,6 +143,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для отзывов."""
     serializer_class = ReviewSerializer
     permission_classes = (IsAdminOrAuthorOrModerator,)
+    lookup_url_kwarg = 'review_id'
 
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
@@ -165,6 +166,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для комментариев."""
     serializer_class = CommentSerializer
     permission_classes = (IsAdminOrAuthorOrModerator,)
+    lookup_url_kwarg = 'comment_id'
 
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
