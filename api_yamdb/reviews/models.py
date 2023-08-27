@@ -4,7 +4,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from users.models import User
 
 
-class Categories(models.Model):
+class Category(models.Model):
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50, unique=True)
 
@@ -28,7 +28,7 @@ class Title(models.Model):
                                    related_name='titles',
                                    )
     category = models.ForeignKey(
-        Categories,
+        Category,
         on_delete=models.SET_NULL,
         null=True,
         related_name='titles',

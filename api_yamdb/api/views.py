@@ -4,14 +4,17 @@ from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, viewsets, status
+from rest_framework import filters, viewsets, status, mixins
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.pagination import LimitOffsetPagination
 
-from reviews.models import Review, Title, Categories, Genres
+from reviews.models import Review, Title, Category, Genres
+from api.filter import GenreFilter
 from api.serializers import (TitlesSerializer,
+                             TitlesPostSerializer,
                              CategoriesSerializer,
                              GenresSerializer,
                              SignUpSerializer,
@@ -24,8 +27,16 @@ from api.serializers import (TitlesSerializer,
 from api.permissions import (IsAdmin,
                              IsAdminOrAuthor,
                              IsAdminOrAuthorOrModerator,
+                             AdminOrReadOnly,
                              )
 from users.models import User
+
+
+class CreateListDestroy(mixins.CreateModelMixin,
+                        mixins.ListModelMixin,
+                        mixins.DestroyModelMixin,
+                        viewsets.GenericViewSet):
+    pass
 
 
 @api_view(['POST'])
@@ -96,25 +107,36 @@ class UserViewSet(viewsets.ModelViewSet):
 class TitlesViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitlesSerializer
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('category', 'genre', 'name', 'year')
-    permission_classes = [IsAdmin]
+    pagination_class = LimitOffsetPagination
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter,)
+    filterset_class = GenreFilter
+    search_fields = ('category__slug', 'genre__slug', 'name', 'year',)
+    permission_classes = [AdminOrReadOnly]
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return TitlesSerializer
+        return TitlesPostSerializer
 
 
-class CategoriesViewSet(viewsets.ModelViewSet):
-    queryset = Categories.objects.all()
+class CategoriesViewSet(CreateListDestroy):
+    queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
+    pagination_class = LimitOffsetPagination
+    lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-    permission_classes = [IsAdmin]
+    permission_classes = [AdminOrReadOnly]
 
 
-class GenresViewSet(viewsets.ModelViewSet):
+class GenresViewSet(CreateListDestroy):
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
+    pagination_class = LimitOffsetPagination
+    lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
-    permission_classes = [IsAdmin]
+    permission_classes = [AdminOrReadOnly]
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -125,7 +147,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
-        reviews_id = self.kwargs.get('review_id')
+        reviews_id = self.kwargs.get('pk')
         title = get_object_or_404(Title, id=title_id)
 
         if not reviews_id:
@@ -149,7 +171,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
         reviews_id = self.kwargs.get('review_id')
-        comment_id = self.kwargs.get('comment_id')
+        comment_id = self.kwargs.get('pk')
         title = get_object_or_404(Title, id=title_id)
         review = get_object_or_404(Review, id=reviews_id)
 
@@ -161,5 +183,5 @@ class CommentViewSet(viewsets.ModelViewSet):
         reviews_id = self.kwargs.get('review_id')
         serializer.save(
             author=self.request.user,
-            review=Review.objects.get(id=reviews_id),
+            title=Title.objects.get(id=reviews_id),
         )

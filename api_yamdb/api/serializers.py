@@ -4,13 +4,13 @@ from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
 from users.models import User
-from reviews.models import Review, Comment, Title, Genres, Categories
+from reviews.models import Review, Comment, Title, Genres, Category
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Categories
+        model = Category
         fields = 'name', 'slug',
 
 
@@ -22,13 +22,11 @@ class GenresSerializer(serializers.ModelSerializer):
 
 
 class TitlesSerializer(serializers.ModelSerializer):
-    category = SlugRelatedField(slug_field='name', read_only=True)
-    genre = SlugRelatedField(slug_field='name', many=True, read_only=True)
-    rating = serializers.SerializerMethodField()
+    category = CategoriesSerializer(read_only=True)
+    genre = GenresSerializer(many=True, read_only=True)
 
     class Meta:
-        fields = ('id', 'name', 'year', 'rating',
-                  'description', 'genre', 'category',)
+        fields = 'id', 'name', 'year', 'description', 'genre', 'category',
         model = Title
 
     def get_rating(self, obj):
@@ -41,6 +39,20 @@ class TitlesSerializer(serializers.ModelSerializer):
             average_value = Decimal(rating / len(reviews))
             return average_value.quantize(Decimal("1.00"))
         return None
+
+
+class TitlesPostSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(
+        slug_field='slug', queryset=Category.objects.all()
+    )
+    genre = serializers.SlugRelatedField(
+        slug_field='slug', queryset=Genres.objects.all(),
+        many=True
+    )
+
+    class Meta:
+        fields = '__all__'
+        model = Title
 
 
 class SignUpSerializer(serializers.Serializer):
