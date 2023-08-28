@@ -5,6 +5,7 @@ from rest_framework.relations import SlugRelatedField
 
 from users.models import User
 from reviews.models import Review, Comment, Title, Genres, Category
+from users.validators import UsernameValidator
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -57,7 +58,10 @@ class TitlesPostSerializer(serializers.ModelSerializer):
 
 class SignUpSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=254, required=True)
-    username = serializers.CharField(max_length=150, required=True)
+    username = serializers.CharField(max_length=150,
+                                     required=True,
+                                     validators=[UsernameValidator()]
+                                     )
 
     def validate(self, data):
         if data['username'] == 'me':
@@ -67,6 +71,7 @@ class SignUpSerializer(serializers.Serializer):
         return data
 
     class Meta:
+        model = User
         fields = ('username', 'email')
 
 
@@ -75,6 +80,7 @@ class TokenSerializer(serializers.Serializer):
     confirmation_code = serializers.CharField(required=True)
 
     class Meta:
+        model = User
         fields = ('username', 'confirmation_code')
 
 
@@ -92,6 +98,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class NoRoleSerializer(serializers.ModelSerializer):
+    role = serializers.CharField(read_only=True)
+
     class Meta:
         model = User
         fields = (
@@ -100,6 +108,7 @@ class NoRoleSerializer(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'bio',
+            'role',
         )
 
 
