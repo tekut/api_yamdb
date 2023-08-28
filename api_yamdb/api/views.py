@@ -84,10 +84,12 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (IsAdminOrAuthor, )
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
     lookup_field = 'username'
 
     @action(
-        methods=['get', 'patch'],
+        methods=['get', 'patch', 'put'],
         detail=False,
         url_path='me',
         permission_classes=(IsAuthenticated, )
@@ -98,10 +100,15 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer = NoRoleSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
         if request.method == 'PATCH':
-            serializer = NoRoleSerializer(user, data=request.data)
+            serializer = NoRoleSerializer(user,
+                                          data=request.data,
+                                          partial=True,
+                                          )
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
