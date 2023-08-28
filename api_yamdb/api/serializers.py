@@ -1,7 +1,6 @@
 from decimal import Decimal
 
 from rest_framework import serializers
-from rest_framework.relations import SlugRelatedField
 
 from reviews.models import Category, Comment, Genres, Review, Title
 from users.models import User
@@ -28,7 +27,8 @@ class TitlesSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField()
 
     class Meta:
-        fields = 'id', 'name', 'rating', 'year', 'description', 'genre', 'category',
+        fields = ('id', 'name', 'rating', 'year',
+                  'description', 'genre', 'category')
         model = Title
 
     def get_rating(self, obj):
