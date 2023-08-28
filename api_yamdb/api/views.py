@@ -81,6 +81,7 @@ def token(request):
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    http_method_names = ['get', 'post', 'delete', 'patch']
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (IsAdminOrAuthor, )
@@ -89,7 +90,7 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
 
     @action(
-        methods=['get', 'patch', 'put'],
+        methods=['get', 'patch'],
         detail=False,
         url_path='me',
         permission_classes=(IsAuthenticated, )
@@ -107,8 +108,6 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-        if request.method == 'PUT':
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
