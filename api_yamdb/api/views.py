@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
 from api.filter import GenreFilter
-from api.permissions import (AdminOrReadOnly, IsAdmin, IsAdminOrAuthor,
+from api.permissions import (AdminOrReadOnly, IsAdminOrAuthor,
                              IsAdminOrAuthorOrModerator)
 from api.serializers import (CategoriesSerializer, CommentSerializer,
                              GenresSerializer, NoRoleSerializer,
@@ -168,7 +168,6 @@ class CommentViewSet(viewsets.ModelViewSet):
     lookup_url_kwarg = 'comment_id'
 
     def get_queryset(self):
-        title_id = self.kwargs.get('title_id')
         reviews_id = self.kwargs.get('review_id')
         comment_id = self.kwargs.get('comment_id')
         review = get_object_or_404(Review, id=reviews_id)
