@@ -4,31 +4,22 @@ from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, viewsets, status, mixins
+from rest_framework import filters, mixins, status, viewsets
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.pagination import LimitOffsetPagination
 
-from reviews.models import Review, Title, Category, Genres
 from api.filter import GenreFilter
-from api.serializers import (TitlesSerializer,
-                             TitlesPostSerializer,
-                             CategoriesSerializer,
-                             GenresSerializer,
-                             SignUpSerializer,
-                             UserSerializer,
-                             CommentSerializer,
-                             ReviewSerializer,
-                             TokenSerializer,
-                             NoRoleSerializer,
-                             )
-from api.permissions import (IsAdmin,
-                             IsAdminOrAuthor,
-                             IsAdminOrAuthorOrModerator,
-                             AdminOrReadOnly,
-                             )
+from api.permissions import (AdminOrReadOnly, IsAdmin, IsAdminOrAuthor,
+                             IsAdminOrAuthorOrModerator)
+from api.serializers import (CategoriesSerializer, CommentSerializer,
+                             GenresSerializer, NoRoleSerializer,
+                             ReviewSerializer, SignUpSerializer,
+                             TitlesPostSerializer, TitlesSerializer,
+                             TokenSerializer, UserSerializer)
+from reviews.models import Category, Genres, Review, Title
 from users.models import User
 
 

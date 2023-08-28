@@ -3,8 +3,8 @@ from decimal import Decimal
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
+from reviews.models import Category, Comment, Genres, Review, Title
 from users.models import User
-from reviews.models import Review, Comment, Title, Genres, Category
 from users.validators import UsernameValidator
 
 
