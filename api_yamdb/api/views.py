@@ -102,6 +102,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
+    http_method_names = ['get', 'post', 'delete', 'patch']
     queryset = Title.objects.all()
     serializer_class = TitlesSerializer
     pagination_class = LimitOffsetPagination
