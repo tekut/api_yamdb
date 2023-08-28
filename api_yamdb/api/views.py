@@ -139,6 +139,7 @@ class GenresViewSet(CreateListDestroy):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для отзывов."""
+    http_method_names = ['get', 'post', 'delete', 'patch']
     serializer_class = ReviewSerializer
     permission_classes = (IsAdminOrAuthorOrModerator,)
     pagination_class = LimitOffsetPagination
@@ -163,6 +164,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для комментариев."""
+    http_method_names = ['get', 'post', 'delete', 'patch']
     serializer_class = CommentSerializer
     permission_classes = (IsAdminOrAuthorOrModerator,)
     pagination_class = LimitOffsetPagination
