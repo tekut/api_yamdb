@@ -150,11 +150,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для отзывов."""
     serializer_class = ReviewSerializer
     permission_classes = (IsAdminOrAuthorOrModerator,)
+    pagination_class = LimitOffsetPagination
     lookup_url_kwarg = 'review_id'
 
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
-        reviews_id = self.kwargs.get('pk')
+        reviews_id = self.kwargs.get('review_id')
         title = get_object_or_404(Title, id=title_id)
 
         if not reviews_id:
@@ -165,7 +166,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title_id = self.kwargs.get('title_id')
         serializer.save(
             author=self.request.user,
-            title=Title.objects.get(id=title_id),
+            title=get_object_or_404(Title, id=title_id),
         )
 
 
@@ -173,13 +174,13 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для комментариев."""
     serializer_class = CommentSerializer
     permission_classes = (IsAdminOrAuthorOrModerator,)
+    pagination_class = LimitOffsetPagination
     lookup_url_kwarg = 'comment_id'
 
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
         reviews_id = self.kwargs.get('review_id')
-        comment_id = self.kwargs.get('pk')
-        title = get_object_or_404(Title, id=title_id)
+        comment_id = self.kwargs.get('comment_id')
         review = get_object_or_404(Review, id=reviews_id)
 
         if not comment_id:
@@ -190,5 +191,5 @@ class CommentViewSet(viewsets.ModelViewSet):
         reviews_id = self.kwargs.get('review_id')
         serializer.save(
             author=self.request.user,
-            title=Title.objects.get(id=reviews_id),
+            review=get_object_or_404(Review, id=reviews_id),
         )
