@@ -181,7 +181,10 @@ class CommentViewSet(viewsets.ModelViewSet):
         return review.comments.filter(id=comment_id)
 
     def perform_create(self, serializer):
+        title_id = self.kwargs.get('title_id')
         reviews_id = self.kwargs.get('review_id')
+        get_object_or_404(Title, id=title_id)
+
         serializer.save(
             author=self.request.user,
             review=get_object_or_404(Review, id=reviews_id),

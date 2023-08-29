@@ -56,6 +56,7 @@ class Review(models.Model):
         'Дата добавления', auto_now_add=True)
 
     class Meta:
+        ordering = ['-pub_date']
         constraints = [
             models.UniqueConstraint(
                 fields=['author', 'title'],
