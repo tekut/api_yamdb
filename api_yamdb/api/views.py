@@ -1,5 +1,6 @@
 import uuid
 
+from django.conf import settings
 from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
@@ -40,7 +41,7 @@ def signup(request):
     try:
         user, create = User.objects.get_or_create(
             username=username,
-            email=email
+            email=email,
         )
     except IntegrityError:
         return Response(
@@ -52,7 +53,7 @@ def signup(request):
     user.save()
     send_mail(
         'Код подверждения', confirmation_code,
-        ['admin@email.com'], (email, ), fail_silently=False
+        [settings.EMAIL_SEND_MAILBOX], (email, ), fail_silently=False
     )
     return Response(serializer.data, status=status.HTTP_200_OK)
 
