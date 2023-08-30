@@ -1,5 +1,6 @@
 import uuid
 
+from django.conf import settings
 from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
@@ -40,7 +41,7 @@ def signup(request):
     try:
         user, create = User.objects.get_or_create(
             username=username,
-            email=email
+            email=email,
         )
     except IntegrityError:
         return Response(
@@ -52,7 +53,7 @@ def signup(request):
     user.save()
     send_mail(
         'Код подверждения', confirmation_code,
-        ['admin@email.com'], (email, ), fail_silently=False
+        [settings.EMAIL_SEND_MAILBOX], (email, ), fail_silently=False
     )
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -180,7 +181,10 @@ class CommentViewSet(viewsets.ModelViewSet):
         return review.comments.filter(id=comment_id)
 
     def perform_create(self, serializer):
+        title_id = self.kwargs.get('title_id')
         reviews_id = self.kwargs.get('review_id')
+        get_object_or_404(Title, id=title_id)
+
         serializer.save(
             author=self.request.user,
             review=get_object_or_404(Review, id=reviews_id),

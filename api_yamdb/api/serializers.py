@@ -1,5 +1,4 @@
-from decimal import Decimal
-
+from django.db.models import Avg
 from rest_framework import serializers
 
 from reviews.models import Category, Comment, Genres, Review, Title
@@ -11,19 +10,19 @@ class CategoriesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = 'name', 'slug',
+        exclude = ('id', )
 
 
 class GenresSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genres
-        fields = 'name', 'slug',
+        exclude = ('id', )
 
 
 class TitlesSerializer(serializers.ModelSerializer):
-    category = CategoriesSerializer(read_only=True)
-    genre = GenresSerializer(many=True, read_only=True)
+    category = CategoriesSerializer(many=False, required=True)
+    genre = GenresSerializer(many=True, required=False)
     rating = serializers.SerializerMethodField()
 
     class Meta:
@@ -32,15 +31,8 @@ class TitlesSerializer(serializers.ModelSerializer):
         model = Title
 
     def get_rating(self, obj):
-        title = Title.objects.get(id=obj.id)
-        reviews = title.reviews.all()
-        rating = 0
-        if reviews:
-            for review in reviews:
-                rating += review.score
-            average_value = Decimal(rating / len(reviews))
-            return average_value.quantize(Decimal("1.00"))
-        return None
+        average_rating = Title.objects.annotate(Avg('reviews__score'))
+        return average_rating[0].reviews__score__avg
 
 
 class TitlesPostSerializer(serializers.ModelSerializer):
@@ -124,7 +116,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         if request.method == 'POST':
             author = request.user
             title_id = self.context.get('view').kwargs.get('title_id')
-            if author.reviews.filter(title=title_id):
+            if author.reviews.filter(title=title_id).exists():
                 raise serializers.ValidationError(
                     'Вы уже оставили отзыв к этому произведению.'
                 )
