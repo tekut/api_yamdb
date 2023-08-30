@@ -34,10 +34,10 @@ class Title(models.Model):
     year = models.IntegerField('Год выпуска', validators=(chek_year,))
     description = models.TextField('Описание', null=True)
     genre = models.ManyToManyField(
-                                   Genres,
-                                   related_name='titles',
-                                   verbose_name='Жанр'
-                                   )
+        Genres,
+        related_name='titles',
+        verbose_name='Жанр'
+    )
     category = models.ForeignKey(
         Category,
         verbose_name='Категория',

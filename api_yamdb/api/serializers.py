@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from django.db.models import Avg
 from rest_framework import serializers
 
@@ -23,8 +21,8 @@ class GenresSerializer(serializers.ModelSerializer):
 
 
 class TitlesSerializer(serializers.ModelSerializer):
-    category = CategoriesSerializer(read_only=True)
-    genre = GenresSerializer(many=True, read_only=True)
+    category = CategoriesSerializer(many=False, required=True)
+    genre = GenresSerializer(many=True, required=False)
     rating = serializers.SerializerMethodField()
 
     class Meta:
