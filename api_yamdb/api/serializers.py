@@ -12,14 +12,14 @@ class CategoriesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = 'name', 'slug',
+        exclude = ('id', )
 
 
 class GenresSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genres
-        fields = 'name', 'slug',
+        exclude = ('id', )
 
 
 class TitlesSerializer(serializers.ModelSerializer):
