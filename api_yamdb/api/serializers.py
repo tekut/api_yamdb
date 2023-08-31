@@ -59,7 +59,7 @@ class SignUpSerializer(serializers.Serializer):
     def validate(self, data):
         if data['username'] == 'me':
             raise serializers.ValidationError(
-                'Нельзя создать логин с именем me'
+                "Использовать имя 'me' в качестве `username` запрещено."
             )
         return data
 

@@ -45,7 +45,7 @@ def signup(request):
         )
     except IntegrityError:
         return Response(
-            'Пользователь с такими полями уже зарегистрирован',
+            {'detail': 'Отсутствует обязательное поле или оно некорректно'},
             status=status.HTTP_400_BAD_REQUEST
         )
     confirmation_code = str(uuid.uuid4())
@@ -69,7 +69,8 @@ def token(request):
     if confirmation_code == userdata.confirmation_code:
         token = str(AccessToken.for_user(userdata))
         return Response({'token': token}, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return Response({'detail': 'Отсутствует обязательное поле или оно некорректно'},
+                    status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -89,6 +90,9 @@ class UserViewSet(viewsets.ModelViewSet):
     )
     def me_patch(self, request):
         user = get_object_or_404(User, username=self.request.user)
+        if request.data.get('username') == 'me':
+            return Response({'detail': "Использовать имя 'me' в качестве `username` запрещено."},
+                            status=status.HTTP_400_BAD_REQUEST)
         if request.method == 'GET':
             serializer = NoRoleSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
