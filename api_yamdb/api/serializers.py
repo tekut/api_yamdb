@@ -1,5 +1,7 @@
-from decimal import Decimal
+from pprint import pprint
 
+from django.db.models import Avg
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from reviews.models import Category, Comment, Genres, Review, Title, GenreTitle
@@ -33,15 +35,10 @@ class TitlesSerializer(serializers.ModelSerializer):
 
 
     def get_rating(self, obj):
-        title = Title.objects.get(id=obj.id)
-        reviews = title.reviews.all()
-        rating = 0
-        if reviews:
-            for review in reviews:
-                rating += review.score
-            average_value = Decimal(rating / len(reviews))
-            return average_value.quantize(Decimal("1.00"))
-        return None
+        ratings_avg = Title.objects.annotate(rating=Avg('reviews__score'))
+        for title in ratings_avg:
+            if title.id == obj.id:
+                return title.rating
 
 
 class TitlesPostSerializer(serializers.ModelSerializer):
@@ -72,7 +69,7 @@ class SignUpSerializer(serializers.Serializer):
     def validate(self, data):
         if data['username'] == 'me':
             raise serializers.ValidationError(
-                'Нельзя создать логин с именем me'
+                "Использовать имя 'me' в качестве `username` запрещено."
             )
         return data
 
@@ -129,11 +126,10 @@ class ReviewSerializer(serializers.ModelSerializer):
         if request.method == 'POST':
             author = request.user
             title_id = self.context.get('view').kwargs.get('title_id')
-            if author.reviews.filter(title=title_id):
+            if author.reviews.filter(title=title_id).exists():
                 raise serializers.ValidationError(
                     'Вы уже оставили отзыв к этому произведению.'
                 )
-            return data
         return data
 
     class Meta:
