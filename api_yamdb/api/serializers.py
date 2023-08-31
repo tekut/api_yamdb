@@ -4,7 +4,7 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
-from reviews.models import Category, Comment, Genres, Review, Title
+from reviews.models import Category, Comment, Genres, Review, Title, GenreTitle
 from users.models import User
 from users.validators import UsernameValidator
 
@@ -24,14 +24,15 @@ class GenresSerializer(serializers.ModelSerializer):
 
 
 class TitlesSerializer(serializers.ModelSerializer):
-    category = CategoriesSerializer(many=False, required=True)
-    genre = GenresSerializer(many=True, required=False)
+    category = CategoriesSerializer()
+    genre = GenresSerializer(many=True)
     rating = serializers.SerializerMethodField()
 
     class Meta:
         fields = ('id', 'name', 'rating', 'year',
                   'description', 'genre', 'category')
         model = Title
+
 
     def get_rating(self, obj):
         ratings_avg = Title.objects.annotate(rating=Avg('reviews__score'))
@@ -50,8 +51,12 @@ class TitlesPostSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'name', 'year',
+                  'description', 'genre', 'category')
         model = Title
+
+    def to_representation(self, value):
+        return TitlesSerializer(value, context=self.context).data
 
 
 class SignUpSerializer(serializers.Serializer):
