@@ -84,6 +84,15 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ('username',)
     lookup_field = 'username'
 
+    def create(self, request, *args, **kwargs):
+        if request.data.get('username') == 'me':
+            return Response(
+                {'detail': "Использовать имя 'me' в качестве `username`"
+                 "запрещено."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return super().create(request, *args, **kwargs)
+
     @action(
         methods=['get', 'patch'],
         detail=False,
