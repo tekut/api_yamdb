@@ -1,7 +1,10 @@
+from pprint import pprint
+
 from django.db.models import Avg
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
-from reviews.models import Category, Comment, Genres, Review, Title
+from reviews.models import Category, Comment, Genres, Review, Title, GenreTitle
 from users.models import User
 from users.validators import UsernameValidator
 
@@ -21,8 +24,8 @@ class GenresSerializer(serializers.ModelSerializer):
 
 
 class TitlesSerializer(serializers.ModelSerializer):
-    category = CategoriesSerializer(many=False, required=True)
-    genre = GenresSerializer(many=True, required=False)
+    category = CategoriesSerializer()
+    genre = GenresSerializer(many=True)
     rating = serializers.SerializerMethodField()
 
     class Meta:
@@ -30,9 +33,12 @@ class TitlesSerializer(serializers.ModelSerializer):
                   'description', 'genre', 'category')
         model = Title
 
+
     def get_rating(self, obj):
-        average_rating = Title.objects.annotate(Avg('reviews__score'))
-        return average_rating[0].reviews__score__avg
+        ratings_avg = Title.objects.annotate(rating=Avg('reviews__score'))
+        for title in ratings_avg:
+            if title.id == obj.id:
+                return title.rating
 
 
 class TitlesPostSerializer(serializers.ModelSerializer):
@@ -45,8 +51,12 @@ class TitlesPostSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'name', 'year',
+                  'description', 'genre', 'category')
         model = Title
+
+    def to_representation(self, value):
+        return TitlesSerializer(value, context=self.context).data
 
 
 class SignUpSerializer(serializers.Serializer):
@@ -59,7 +69,7 @@ class SignUpSerializer(serializers.Serializer):
     def validate(self, data):
         if data['username'] == 'me':
             raise serializers.ValidationError(
-                'Нельзя создать логин с именем me'
+                "Использовать имя 'me' в качестве `username` запрещено."
             )
         return data
 
@@ -120,7 +130,6 @@ class ReviewSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     'Вы уже оставили отзыв к этому произведению.'
                 )
-            return data
         return data
 
     class Meta:
