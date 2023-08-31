@@ -1,4 +1,7 @@
+from pprint import pprint
+
 from django.db.models import Avg
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from reviews.models import Category, Comment, Genres, Review, Title
@@ -31,8 +34,10 @@ class TitlesSerializer(serializers.ModelSerializer):
         model = Title
 
     def get_rating(self, obj):
-        average_rating = Title.objects.annotate(Avg('reviews__score'))
-        return average_rating[0].reviews__score__avg
+        ratings_avg = Title.objects.annotate(rating=Avg('reviews__score'))
+        for title in ratings_avg:
+            if title.id == obj.id:
+                return title.rating
 
 
 class TitlesPostSerializer(serializers.ModelSerializer):
@@ -120,7 +125,6 @@ class ReviewSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     'Вы уже оставили отзыв к этому произведению.'
                 )
-            return data
         return data
 
     class Meta:
