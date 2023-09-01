@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from reviews.models import Category, Comment, Genres, Review, Title
 from users.models import User
-from users.validators import UsernameValidator
+from users.validators import no_me_as_username_allowed, UsernameValidator
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -52,15 +52,9 @@ class SignUpSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=254, required=True)
     username = serializers.CharField(max_length=150,
                                      required=True,
-                                     validators=[UsernameValidator()]
-                                     )
-
-    def validate(self, data):
-        if data['username'] == 'me':
-            raise serializers.ValidationError(
-                "Использовать имя 'me' в качестве `username` запрещено."
-            )
-        return data
+                                     validators=[
+                                         UsernameValidator(),
+                                         no_me_as_username_allowed])
 
     class Meta:
         model = User

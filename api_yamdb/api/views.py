@@ -85,15 +85,6 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ('username',)
     lookup_field = 'username'
 
-    def create(self, request, *args, **kwargs):
-        if request.data.get('username') == 'me':
-            return Response(
-                {'detail': "Использовать имя 'me' в качестве `username`"
-                 "запрещено."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        return super().create(request, *args, **kwargs)
-
     @action(
         methods=['get', 'patch'],
         detail=False,
@@ -102,12 +93,7 @@ class UserViewSet(viewsets.ModelViewSet):
     )
     def me_patch(self, request):
         user = get_object_or_404(User, username=self.request.user)
-        if request.data.get('username') == 'me':
-            return Response(
-                {'detail': "Использовать имя 'me' в качестве `username`"
-                 "запрещено."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+
         if request.method == 'GET':
             serializer = NoRoleSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
