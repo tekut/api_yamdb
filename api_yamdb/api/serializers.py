@@ -1,9 +1,8 @@
-from django.db.models import Avg
 from rest_framework import serializers
 
 from reviews.models import Category, Comment, Genres, Review, Title
 from users.models import User
-from users.validators import UsernameValidator
+from users.validators import no_me_as_username_allowed, UsernameValidator
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -23,18 +22,12 @@ class GenresSerializer(serializers.ModelSerializer):
 class TitlesSerializer(serializers.ModelSerializer):
     category = CategoriesSerializer()
     genre = GenresSerializer(many=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.FloatField(read_only=True)
 
     class Meta:
-        fields = ('id', 'name', 'rating', 'year',
+        fields = ('id', 'name', 'year', 'rating',
                   'description', 'genre', 'category')
         model = Title
-
-    def get_rating(self, obj):
-        ratings_avg = Title.objects.annotate(rating=Avg('reviews__score'))
-        for title in ratings_avg:
-            if title.id == obj.id:
-                return title.rating
 
 
 class TitlesPostSerializer(serializers.ModelSerializer):
@@ -59,15 +52,9 @@ class SignUpSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=254, required=True)
     username = serializers.CharField(max_length=150,
                                      required=True,
-                                     validators=[UsernameValidator()]
-                                     )
-
-    def validate(self, data):
-        if data['username'] == 'me':
-            raise serializers.ValidationError(
-                "Использовать имя 'me' в качестве `username` запрещено."
-            )
-        return data
+                                     validators=[
+                                         UsernameValidator(),
+                                         no_me_as_username_allowed])
 
     class Meta:
         model = User

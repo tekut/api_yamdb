@@ -3,6 +3,7 @@ import uuid
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import IntegrityError
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets
@@ -45,7 +46,7 @@ def signup(request):
         )
     except IntegrityError:
         return Response(
-            {'detail': 'Отсутствует обязательное поле или оно некорректно'},
+            {'Такой логин или email уже был использован'},
             status=status.HTTP_400_BAD_REQUEST
         )
     confirmation_code = str(uuid.uuid4())
@@ -65,14 +66,22 @@ def token(request):
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data['username']
     confirmation_code = serializer.validated_data['confirmation_code']
-    userdata = get_object_or_404(User, username=username)
+    try:
+        userdata = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return Response(
+            {'username': 'Такой пользователь не существует'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
     if confirmation_code == userdata.confirmation_code:
         token = str(AccessToken.for_user(userdata))
         return Response({'token': token}, status=status.HTTP_201_CREATED)
-    return Response(
-        {'detail': 'Отсутствует обязательное поле или оно некорректно'},
-        status=status.HTTP_400_BAD_REQUEST
-    )
+    else:
+        return Response(
+            {"confirmation_code": ["Неверный код подтверждения"]},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -92,12 +101,7 @@ class UserViewSet(viewsets.ModelViewSet):
     )
     def me_patch(self, request):
         user = get_object_or_404(User, username=self.request.user)
-        if request.data.get('username') == 'me':
-            return Response(
-                {'detail': "Использовать имя 'me' в качестве `username`"
-                 "запрещено."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+
         if request.method == 'GET':
             serializer = NoRoleSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -113,7 +117,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class TitlesViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'delete', 'patch']
-    queryset = Title.objects.all()
+    queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
     serializer_class = TitlesSerializer
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend, filters.SearchFilter,)

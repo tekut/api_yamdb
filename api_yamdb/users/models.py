@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from users.validators import UsernameValidator
+from users.validators import no_me_as_username_allowed, UsernameValidator
 
 
 class UserRoles(models.TextChoices):
@@ -17,7 +17,7 @@ class User(AbstractUser):
         'Имя пользователя',
         max_length=150,
         unique=True,
-        validators=[username_validator],
+        validators=[username_validator, no_me_as_username_allowed],
     )
     email = models.EmailField('Email', max_length=254, unique=True)
     first_name = models.CharField(max_length=150, blank=True)
