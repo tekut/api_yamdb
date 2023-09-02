@@ -49,8 +49,8 @@ class Title(models.Model):
     )
 
     class Meta:
-        verbose_name = 'заголовок'
-        verbose_name_plural = 'Заголовки'
+        verbose_name = 'Название'
+        verbose_name_plural = 'Названия'
 
     def __str__(self):
         return self.name
@@ -89,6 +89,8 @@ class Review(models.Model):
                 name='unique review',
             )
         ]
+        verbose_name = 'Оценка'
+        verbose_name_plural = 'Оценки'
 
     def __str__(self):
         return self.text[:50]
@@ -108,3 +110,7 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.text[:50]
+
+    class Meta:
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
