@@ -46,7 +46,7 @@ def signup(request):
         )
     except IntegrityError:
         return Response(
-            {'Такой логин или email уже был использован'},
+            {'email': ['Такой логин или email уже был использован']},
             status=status.HTTP_400_BAD_REQUEST
         )
     confirmation_code = str(uuid.uuid4())
@@ -70,7 +70,7 @@ def token(request):
         userdata = User.objects.get(username=username)
     except User.DoesNotExist:
         return Response(
-            {'username': 'Такой пользователь не существует'},
+            {'username': ['Такой пользователь не существует']},
             status=status.HTTP_404_NOT_FOUND
         )
 
@@ -79,7 +79,7 @@ def token(request):
         return Response({'token': token}, status=status.HTTP_201_CREATED)
     else:
         return Response(
-            {"confirmation_code": ["Неверный код подтверждения"]},
+            {'confirmation_code': ['Неверный код подтверждения']},
             status=status.HTTP_400_BAD_REQUEST
         )
 
